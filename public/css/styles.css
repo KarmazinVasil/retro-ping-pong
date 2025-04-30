@@ -1,0 +1,17 @@
+body {
+    background-color: black;
+    color: #33ff33;
+    font-family: monospace;
+    text-shadow: 0 0 2px #33ff33;
+  }
+  .terminal {
+    padding: 2rem;
+  }
+  .boot-text {
+    animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
