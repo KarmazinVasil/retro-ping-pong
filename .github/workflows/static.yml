@@ -1,0 +1,15 @@
+name: Deploy Retro Ping Pong
+on:
+  push:
+    branches: [main]
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to GitHub Pages
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: "./" # Или "./dist", если у вас сборка в отдельной папке
