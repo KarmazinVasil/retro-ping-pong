@@ -119,7 +119,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
 function addInputField() {
-  // Удаляем все предыдущие input'ы, если они остались по ошибке
   terminal.querySelectorAll("input.terminal-input").forEach((el) => el.remove());
 
   const input = document.createElement("input");
@@ -163,9 +162,40 @@ function handleCommand(cmd) {
        SettingsManager.enter();
        break;
 
-    case "exit":
-      terminal.innerHTML += "\nShutting down...\n";
-      break;
+       case "exit":
+        terminal.innerHTML += "\nShutting down...\n";
+        setTimeout(() => {
+          document.body.style.transition = "all 1.5s ease";
+          document.body.style.opacity = "0";
+          
+          setTimeout(() => {
+            document.body.innerHTML = `
+              <style>
+                body {
+                  background: #000;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                  margin: 0;
+                  color: #333;
+                  font-family: monospace;
+                }
+                .power-off {
+                  font-size: 24px;
+                  text-align: center;
+                }
+              </style>
+            `;
+            
+            document.body.style.pointerEvents = "none";
+            
+            const oldBody = document.body.cloneNode(true);
+            document.body.replaceWith(oldBody);
+            
+          }, 1500);
+        }, 500);
+        break;
 
     default:
       terminal.innerHTML += "\nUnknown command. Try: start, options, exit\n";
@@ -234,11 +264,11 @@ function initPongGame() {
   const ball = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    radius: 5,
+    radius: 4,
     dx: 3,
     dy: 3,
-    speed: 4,
-    maxSpeed: 10,
+    speed: 3,
+    maxSpeed: 6,
     history: [],
   };
 
@@ -252,11 +282,10 @@ function initPongGame() {
     ArrowDown: false,
   };
 
-  // Обробники подій — збережені для подальшого видалення
   function onKeyDown(e) {
     if (e.key in keys) {
       keys[e.key] = true;
-      e.preventDefault(); // отменяем прокрутку страницы
+      e.preventDefault(); 
     }
   
     if (e.key === "q") {
@@ -269,7 +298,6 @@ function initPongGame() {
     if (e.key in keys) keys[e.key] = false;
   }
 
-  // Додаємо обробники
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("keyup", onKeyUp);
 
@@ -309,7 +337,7 @@ function initPongGame() {
 
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
-    ball.speed = 3;
+    ball.speed = 3.5;
     const angle = (Math.random() * Math.PI / 2 - Math.PI / 4); // -45°..+45°
     const direction = Math.random() < 0.5 ? 1 : -1;
     ball.dx = Math.cos(angle) * ball.speed * direction;
@@ -322,6 +350,10 @@ function initPongGame() {
 
     if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
       ball.dy *= -1;
+      if (window.GameSounds && window.GameSounds.wallHit) {
+        window.GameSounds.wallHit.currentTime = 0;
+        window.GameSounds.wallHit.play().catch(() => {});
+     }
     }
 
     if (
@@ -330,9 +362,17 @@ function initPongGame() {
     ) return;
 
     if (ball.x < 0) {
+      if (window.GameSounds && window.GameSounds.scoreSound) {
+        window.GameSounds.scoreSound.currentTime = 0;
+        window.GameSounds.scoreSound.play().catch(() => {});
+      }
       rightScore++;
       rightScore >= maxScore ? endGame("win2") : resetBall();
     } else if (ball.x > canvas.width) {
+      if (window.GameSounds && window.GameSounds.scoreSound) {
+        window.GameSounds.scoreSound.currentTime = 0;
+        window.GameSounds.scoreSound.play().catch(() => {});
+     }
       leftScore++;
       leftScore >= maxScore ? endGame("win1") : resetBall();
     }
@@ -346,6 +386,15 @@ function initPongGame() {
       ball.y > py &&
       ball.y < py + paddleHeight
     ) {
+      try {
+        if (window.GameSounds?.paddleHit) {
+            window.GameSounds.paddleHit.currentTime = 0;
+            window.GameSounds.paddleHit.playbackRate = 0.8 + Math.random() * 0.4;
+            window.GameSounds.paddleHit.play().catch(() => {});
+        }
+    } catch (e) {
+        console.error("Sound error:", e);
+    }
       const paddleCenter = py + paddleHeight / 2;
       const offset = (ball.y - paddleCenter) / (paddleHeight / 2);
       let angle = offset * (Math.PI / 4);

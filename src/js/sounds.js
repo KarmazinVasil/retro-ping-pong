@@ -1,11 +1,17 @@
 const bootSound = document.getElementById("bootSound");
 const bgNoise = document.getElementById("bgNoise");
 const keyClick = document.getElementById("keyClick");
+const paddleHit = document.getElementById("paddleHit");
+const wallHit = document.getElementById("wallHit");
+const scoreSound = document.getElementById("scoreSound");
 
 function startAudio() {
   bootSound.volume = 0.5;
   bgNoise.volume = 0.2;
   keyClick.volume = 0.1;
+  paddleHit.volume = 0.3;
+  wallHit.volume = 12.8;
+  scoreSound.volume = 0.4;
 
   const tryPlay = (audio) => {
     if (audio.paused) {
@@ -21,7 +27,6 @@ function startAudio() {
   document.removeEventListener("click", startAudio);
 }
 
-// Включаем звук при первом действии
 document.addEventListener("keydown", startAudio);
 document.addEventListener("click", startAudio);
 
@@ -44,3 +49,8 @@ document.addEventListener("keyup", (e) => {
   pressedKeys.delete(e.code);
 });
 
+window.GameSounds = {
+  paddleHit,
+  wallHit,
+  scoreSound
+};

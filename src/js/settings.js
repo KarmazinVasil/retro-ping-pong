@@ -1,113 +1,189 @@
 const SettingsManager = (function () {
-    const settings = [
-      {
-        name: "Background sound",
-        values: ["OFF", "25%", "50%", "75%", "100%"],
-        index: 2,
-        apply: (value) => {
-          const bg = document.getElementById("bgNoise");
-          if (!bg) return;
-          if (value === "OFF") {
-            bg.pause();
-          } else {
-            bg.volume = parseInt(value) / 100;
-            bg.loop = true;
-            bg.play().catch(() => {});
-          }
-        },
+  const settings = [
+    {
+      name: "Background sound",
+      values: ["OFF", "25%", "50%", "75%", "100%"],
+      index: 2,
+      apply: (value) => {
+        const bg = document.getElementById("bgNoise");
+        if (!bg) return;
+        if (value === "OFF") {
+          bg.pause();
+        } else {
+          bg.volume = parseInt(value) / 100;
+          bg.loop = true;
+          bg.play().catch(() => {});
+        }
+        saveSettings();
       },
-    ];
-  
-    let selectedIndex = 0;
-    let active = false;
-  
-    function showOptions() {
-      terminal.innerHTML += `\n=== SETTINGS ===\n`;
-      settings.forEach((s, i) => {
-        const selected = i === selectedIndex ? ">>" : "  ";
-        terminal.innerHTML += `${selected} ${s.name}: ${s.values[s.index]}\n`;
+    },
+    {
+      name: "CRT Effect",
+      values: ["ON", "OFF"],
+      index: 0,
+      apply: (value) => {
+        if (value === "OFF") {
+          document.body.classList.add("no-crt-effect");
+        } else {
+          document.body.classList.remove("no-crt-effect");
+        }
+        saveSettings();
+      },
+    },
+  ];
+
+  let selectedIndex = 0;
+  let active = false;
+  let settingsStartLine = -1;
+
+    function loadSettings() {
+      const savedSettings = localStorage.getItem('terminalSettings');
+      if (savedSettings) {
+          try {
+              const parsed = JSON.parse(savedSettings);
+              settings.forEach(setting => {
+                  const savedSetting = parsed[setting.name];
+                  if (savedSetting) {
+                      setting.index = savedSetting.index;
+                      setting.apply(savedSetting.value);
+                  }
+              });
+          } catch (e) {
+              console.error("Failed to load settings:", e);
+          }
+      }
+  }
+
+  function saveSettings() {
+      const settingsToSave = {};
+      settings.forEach(setting => {
+          settingsToSave[setting.name] = {
+              index: setting.index,
+              value: setting.values[setting.index]
+          };
       });
-      terminal.innerHTML += `\n(Use ↑↓ to navigate, ←→ to adjust, Q to exit)\n`;
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-  
-    function updateDisplay() {
-      const lines = terminal.innerHTML.split("\n");
-      const base = lines.findIndex((line) => line.includes("=== SETTINGS ==="));
-      if (base === -1) return;
-  
-      for (let i = 0; i < settings.length; i++) {
+      localStorage.setItem('terminalSettings', JSON.stringify(settingsToSave));
+  }
+
+  loadSettings();
+
+  function showOptions() {
+    const lines = terminal.innerHTML.split("\n");
+    const preSettingsLines = settingsStartLine === -1 
+      ? lines 
+      : lines.slice(0, settingsStartLine);
+    
+    const newLines = [
+      ...preSettingsLines,
+      "=== SETTINGS ===",
+      ...settings.map((s, i) => {
+        const selected = i === selectedIndex ? ">>" : "  ";
+        const activeClass = i === selectedIndex ? "settings-active-line" : "";
+        return `<span class="${activeClass}">${selected} ${s.name}: ${s.values[s.index]}</span>`;
+      }),
+      "",
+      "(Use ↑↓ to navigate, ←→ to adjust, press Q or any key to exit)"
+    ];
+    
+    settingsStartLine = preSettingsLines.length;
+    terminal.innerHTML = newLines.join("\n");
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function clearActiveStyles() {
+    const activeElements = terminal.querySelectorAll('.settings-active-line');
+    activeElements.forEach(el => {
+        el.classList.remove('settings-active-line');
+    });
+}
+
+  function updateDisplay() {
+    clearActiveStyles();
+    
+    const lines = terminal.innerHTML.split("\n");
+    for (let i = 0; i < settings.length; i++) {
         const s = settings[i];
         const selected = i === selectedIndex ? ">>" : "  ";
-        lines[base + 1 + i] = `${selected} ${s.name}: ${s.values[s.index]}`;
-      }
-  
-      terminal.innerHTML = lines.join("\n");
-      terminal.scrollTop = terminal.scrollHeight;
+        const activeClass = i === selectedIndex ? "settings-active-line" : "";
+        lines[settingsStartLine + 1 + i] = `<span class="${activeClass}">${selected} ${s.name}: ${s.values[s.index]}</span>`;
     }
-  
-    function handleKey(key) {
-      if (!active) return false;
-  
-      switch (key) {
-        case "ArrowUp":
-          selectedIndex = (selectedIndex - 1 + settings.length) % settings.length;
-          updateDisplay();
-          return true;
-  
-        case "ArrowDown":
-          selectedIndex = (selectedIndex + 1) % settings.length;
-          updateDisplay();
-          return true;
-  
-        case "ArrowLeft":
-          changeValue(-1);
-          return true;
-  
-        case "ArrowRight":
-          changeValue(1);
-          return true;
+    
+    terminal.innerHTML = lines.join("\n");
+    terminal.scrollTop = terminal.scrollHeight;
+  }
 
-        case "Q":
-          exitOptions("user_exit");
-          return true;
+  function handleKey(key) {
+    if (!active) return false;
 
-        case "q":
-          exitOptions("user_exit");
-          return true;
-      }
-  
-      return false;
+    switch (key) {
+      case "ArrowUp":
+        selectedIndex = (selectedIndex - 1 + settings.length) % settings.length;
+        updateDisplay();
+        return true;
+
+      case "ArrowDown":
+        selectedIndex = (selectedIndex + 1) % settings.length;
+        updateDisplay();
+        return true;
+
+      case "ArrowLeft":
+        changeValue(-1);
+        return true;
+
+      case "ArrowRight":
+        changeValue(1);
+        return true;
+
+      case "Q":
+      case "q":
+        exitOptions("user_exit");
+        return true;
     }
-  
-    function changeValue(direction) {
-      const setting = settings[selectedIndex];
-      setting.index = (setting.index + direction + setting.values.length) % setting.values.length;
-      setting.apply(setting.values[setting.index]);
-      updateDisplay();
+
+    return false;
+  }
+
+  function changeValue(direction) {
+    const setting = settings[selectedIndex];
+    setting.index = (setting.index + direction + setting.values.length) % setting.values.length;
+    setting.apply(setting.values[setting.index]);
+    updateDisplay();
+  }
+
+  function exitOptions(reason) {
+    if (!active) return;
+
+    clearActiveStyles();
+    active = false;
+    settingsStartLine = -1;
+
+    document.removeEventListener('keydown', handleOutsideInteraction);
+
+    terminal.innerHTML += reason === "user_exit"
+      ? "\nExited settings.\n"
+      : "\nSettings closed.\n";
+
+    addInputField();
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+      function handleOutsideInteraction(e) {
+        if (!active) return;
+        
+        if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Q', 'q', 'Enter'].includes(e.key)) {
+            exitOptions('auto_close');
+        }
     }
-  
-    function exitOptions(reason) {
-      if (!active) return;
-      active = false;
-  
-      terminal.innerHTML += reason === "user_exit"
-        ? "\nExited settings.\n"
-        : "\nSettings closed.\n";
-  
-      addInputField();
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-  
+
     return {
-      enter: () => {
-        active = true;
-        selectedIndex = 0;
-        showOptions();
-      },
-      handleKey,
-      isActive: () => active,
-      exitOptions,
+        enter: () => {
+            active = true;
+            selectedIndex = 0;
+            document.addEventListener('keydown', handleOutsideInteraction);
+            showOptions();
+        },
+        handleKey,
+        isActive: () => active,
+        exitOptions,
     };
-  })();
-  
+})();
