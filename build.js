@@ -1,16 +1,26 @@
 const fs = require("fs");
 const fse = require("fs-extra");
 
-fs.mkdirSync("dist", { recursive: true });
+const SOURCE_DIR = ".";
+const DEST_DIR = "dist";
 
-["index.html", "style.css", "script.js"].forEach(file => {
-  if (fs.existsSync(file)) {
-    fse.copySync(file, `dist/${file}`);
+// Удалить dist сначала
+fse.removeSync(DEST_DIR);
+
+// Скопировать всё, кроме dist, node_modules, .git и сам build.js
+fse.copySync(SOURCE_DIR, DEST_DIR, {
+  filter: (src) => {
+    // Нормализуем путь
+    const normalized = src.replace(/\\/g, "/");
+
+    return !normalized.startsWith(`${SOURCE_DIR}/dist`) &&
+           !normalized.includes("node_modules") &&
+           !normalized.includes(".git") &&
+           !normalized.endsWith("build.js");
   }
 });
 
-if (fs.existsSync("assets") && fs.lstatSync("assets").isDirectory()) {
-  fse.copySync("assets", "dist/assets", { overwrite: true });
-}
+// Создать .nojekyll
+fs.writeFileSync(`${DEST_DIR}/.nojekyll`, "");
 
-fs.writeFileSync("dist/.nojekyll", "");
+console.log("✅ Build complete!");
