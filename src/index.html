@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>System Boot</title>
+  <link rel="stylesheet" href="../public/css/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="terminal-screen" id="terminal"></div>
+  
+  <audio id="bootSound" src="/public/sounds/bootSound.mp3" preload="auto"></audio>
+  <audio id="bgNoise" src="/public/sounds/bgNoise.mp3" preload="auto" loop></audio>
+  <audio id="keyClick" src="/public/sounds/keySound.mp3" preload="auto"></audio>
+  <audio id="paddleHit" src="/public/sounds/paddle_hit.wav" preload="auto"></audio>
+  <audio id="wallHit" src="/public/sounds/wall_hit.wav" preload="auto"></audio>
+  <audio id="scoreSound" src="/public/sounds/score.wav" preload="auto"></audio>  
+  <script src="js/sounds.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/settings.js"></script>   
+  <svg width="0" height="0" style="position:absolute">
+    <filter id="crt-warp" x="-50%" y="-50%" width="200%" height="200%">
+      <feImage result="warpMap" xlink:href="../public/img/sphere_wide_1.png" />
+      <feDisplacementMap in="SourceGraphic" in2="warpMap" scale="50" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+</body>
+</html>
+
+

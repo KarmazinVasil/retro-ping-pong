@@ -1,0 +1,35 @@
+{
+  "name": "retro-ping-pong",
+  "version": "1.0.0",
+  "description": "Retro Ping Pong Game",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "build": "node build.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KarmazinVasil/retro-ping-pong.git"
+  },
+  "keywords": [
+    "game",
+    "retro",
+    "pingpong"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KarmazinVasil/retro-ping-pong/issues"
+  },
+  "homepage": "https://KarmazinVasil.github.io/retro-ping-pong",
+  "dependencies": {
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0",
+    "mkdirp": "^3.0.1"
+  }
+}
